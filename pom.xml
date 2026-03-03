@@ -8,10 +8,10 @@
 		<version>4.0.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.toolschalange</groupId>
-	<artifactId>toolschalange</artifactId>
+	<groupId>com.toolschallenge</groupId>
+	<artifactId>toolschallenge</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>toolschalange</name>
+	<name>toolschallenge</name>
 	<description>Projeto desafio de pagamento e consulta de cartão de crédito</description>
 	<url/>
 	<licenses>
