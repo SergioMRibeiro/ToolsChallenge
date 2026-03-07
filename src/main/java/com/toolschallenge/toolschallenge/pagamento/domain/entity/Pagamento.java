@@ -1,17 +1,18 @@
 package com.toolschallenge.toolschallenge.pagamento.domain.entity;
 
-import com.toolschallenge.toolschallenge.pagamento.domain.valueobejct.MetodoPagamento;
 import com.toolschallenge.toolschallenge.pagamento.domain.valueobejct.Transacao;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
+@Table(name = "pagamento")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "Pagamento")
-@Builder
 public class Pagamento {
 
     @Id
@@ -21,6 +22,4 @@ public class Pagamento {
     @Embedded
     private Transacao transacao;
 
-    @Embedded
-    private MetodoPagamento metodoPagamento;
 }

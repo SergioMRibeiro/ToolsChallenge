@@ -1,5 +1,6 @@
 package com.toolschallenge.toolschallenge.pagamento;
 
+import com.toolschallenge.toolschallenge.exception.ResourceNotFoundException;
 import com.toolschallenge.toolschallenge.pagamento.domain.dto.PagamentoRequestDto;
 import com.toolschallenge.toolschallenge.pagamento.domain.entity.Pagamento;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,7 +8,9 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static com.toolschallenge.toolschallenge.pagamento.domain.enums.TransacaoStatusType.*;
 
@@ -20,34 +23,58 @@ public class PagamentoService {
     public Pagamento registerNewPayment (PagamentoRequestDto pagamentoRequest){
         Pagamento pagamento = PagamentoMapper.toEntity(pagamentoRequest);
 
-        if (pagamento.getTransacao().getDescricao().getValor().compareTo(new BigDecimal("1000.00")) > 0) {
+        // Simulação de regra de negócio: se o valor for maior que R$ 10000,00 de uma só vez, o pagamento é negado, caso contrário, é autorizado.
+        if (pagamento.getTransacao().getDescricao().getValor().compareTo(new BigDecimal("10000.00")) > 0) {
             pagamento.getTransacao().getDescricao().setTransacaoStatusType(NEGADO);
         } else {
             pagamento.getTransacao().getDescricao().setTransacaoStatusType(AUTORIZADO);
         }
 
-        String nsu;
-        do {
-            nsu = String.valueOf((long) (Math.random() * 1_000_000_000L));
-        } while (pagamentoRepository.existsByTransacao_Descricao_Nsu(nsu));
+        String nsu = generateUniqueNumber(
+                n -> pagamentoRepository.existsByTransacao_Descricao_Nsu(n),
+                10
+        );
+
         pagamento.getTransacao().getDescricao().setNsu(nsu);
 
-        String codigo;
-        do {
-            codigo = String.valueOf((long) (Math.random() * 1_000_000_000L));
-        } while (pagamentoRepository.existsByTransacao_Descricao_CodigoAutorizacao(codigo));
+        String codigo = generateUniqueNumber(
+                n -> pagamentoRepository.existsByTransacao_Descricao_CodigoAutorizacao(n),
+                9
+        );
         pagamento.getTransacao().getDescricao().setCodigoAutorizacao(codigo);
 
         return pagamentoRepository.save(pagamento);
 
     }
 
-    public Optional<Pagamento> getById (Long id){
-        return pagamentoRepository.findById(id);
+    public Pagamento getById (String id){
+        return pagamentoRepository.getByTransacao_Id(id);
     }
 
     public List<Pagamento> resgatarTodosPagamentos() {
         return pagamentoRepository.findAll();
+    }
+
+    public Pagamento estornarPagamento(String id) {
+        Pagamento pagamento = pagamentoRepository.getByTransacao_Id(id);
+        pagamento.getTransacao().getDescricao().setTransacaoStatusType(CANCELADO);
+
+        return pagamentoRepository.save(pagamento);
+
+    }
+
+
+    /** Código para nsu (10 dígitos) e código de autorização (9 dígitos) */
+    private String generateUniqueNumber(Predicate<String> existsCheck, int length) {
+
+        long min = (long) Math.pow(10, length - 1);
+        long max = (long) Math.pow(10, length);
+
+        return Stream.generate(() -> ThreadLocalRandom.current().nextLong(min, max))
+                .map(String::valueOf)
+                .filter(n -> !existsCheck.test(n))
+                .findFirst()
+                .orElseThrow();
     }
 
 }

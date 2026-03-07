@@ -22,4 +22,7 @@ public class Transacao {
 
     @Embedded
     private Descricao descricao;
+
+    @Embedded
+    private MetodoPagamento metodoPagamento;
 }

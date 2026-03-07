@@ -26,10 +26,10 @@ public class Descricao {
     @Column(name = "estabelecimento" , nullable = false)
     private String estabelecimento;
 
-    @Column(name = "nsu", nullable = false, unique = true, length = 9)
+    @Column(name = "nsu", nullable = false, unique = true, length = 10)
     private String nsu;
 
-    @Column(name = "codigo_autorizacao", nullable = false, unique = true)
+    @Column(name = "codigo_autorizacao", nullable = false, unique = true, length = 9)
     private String codigoAutorizacao;
 
     @Column(name = "transacao_status_type")

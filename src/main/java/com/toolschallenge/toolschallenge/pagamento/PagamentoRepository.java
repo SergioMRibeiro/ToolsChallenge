@@ -10,4 +10,6 @@ public interface PagamentoRepository extends JpaRepository<Pagamento, Long> {
     boolean existsByTransacao_Descricao_Nsu(String nsu);
 
     boolean existsByTransacao_Descricao_CodigoAutorizacao(String codigoAutorizacao);
+
+    Pagamento getByTransacao_Id(String id);
 }

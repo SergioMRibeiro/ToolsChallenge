@@ -17,14 +17,14 @@ import java.util.Locale;
  * DTO de resposta que representa o JSON de saída solicitado.
  */
 public record PagamentoResponseDto(
-        @JsonProperty("transacao") Transacao transacao,
-        @JsonProperty("formaPagamento") FormaPagamento formaPagamento
+        @JsonProperty("transacao") Transacao transacao
 ) {
 
     public record Transacao(
             @JsonProperty("cartao") String cartao,
             String id,
-            @JsonProperty("descricao") DescricaoDto descricao
+            @JsonProperty("descricao") DescricaoDto descricao,
+            @JsonProperty("formaPagamento") FormaPagamento formaPagamento
     ) {}
 
     public record DescricaoDto(
@@ -55,14 +55,14 @@ public record PagamentoResponseDto(
 
 
     public static PagamentoResponseDto from(Pagamento pagamento) {
-        return from(pagamento, "", "");
+        return from(pagamento, null, null);
     }
 
     public static PagamentoResponseDto from(Pagamento pagamento, String cartao, String id) {
         if (pagamento == null) throw new IllegalArgumentException("pagamento cannot be null");
 
         Descricao desc = pagamento.getTransacao().getDescricao();
-        MetodoPagamento pm = pagamento.getMetodoPagamento();
+        MetodoPagamento pm = pagamento.getTransacao().getMetodoPagamento();
 
         // valor
         String valorStr = "0,00";
@@ -96,8 +96,8 @@ public record PagamentoResponseDto(
         String parcelas = pm != null && pm.getParcelas() != null ? String.valueOf(pm.getParcelas()) : "";
         FormaPagamento respostaPm = new FormaPagamento(tipo, parcelas);
 
-        Transacao respostaTrans = new Transacao(cartao != null ? cartao : "", id != null ? id : "", respostaDesc);
+        Transacao respostaTrans = new Transacao(cartao != null ? cartao : pagamento.getTransacao().getCartao(), id != null ? id : pagamento.getTransacao().getId(), respostaDesc, respostaPm);
 
-        return new PagamentoResponseDto(respostaTrans, respostaPm);
+        return new PagamentoResponseDto(respostaTrans);
     }
 }
