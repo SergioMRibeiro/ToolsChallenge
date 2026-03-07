@@ -4,6 +4,8 @@ import com.toolschallenge.toolschallenge.pagamento.domain.dto.PagamentoRequestDt
 import com.toolschallenge.toolschallenge.pagamento.domain.dto.PagamentoResponseDto;
 import com.toolschallenge.toolschallenge.pagamento.domain.entity.Pagamento;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,32 +21,34 @@ public class PagamentoControlller {
     }
 
     @PostMapping
-     public PagamentoResponseDto registerPayment(@Valid @RequestBody PagamentoRequestDto pagamentoRequest) {
-            Pagamento pagamento = pagamentoService.registerNewPayment(pagamentoRequest);
-        return PagamentoMapper.toDto(pagamento);
+     public ResponseEntity<PagamentoResponseDto> registerPayment(@Valid @RequestBody PagamentoRequestDto pagamentoRequest) {
+        Pagamento pagamento = PagamentoMapper.toEntity(pagamentoRequest);
+        PagamentoResponseDto response =  PagamentoMapper.toDto(pagamentoService.registerNewPayment(pagamento));
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
      }
 
      @GetMapping("/{id}")
-    public PagamentoResponseDto  getById (@PathVariable String id) {
+    public ResponseEntity<PagamentoResponseDto>  getById (@PathVariable String id) {
          Pagamento pagamento = pagamentoService.getById(id);
-         return PagamentoMapper.toDto(pagamento);
+         return ResponseEntity.status(HttpStatus.OK).body(PagamentoMapper.toDto(pagamento));
 
      }
 
     @GetMapping
-    public List<PagamentoResponseDto> regatarTodosPagamentos () {
+    public ResponseEntity<List<PagamentoResponseDto>> regatarTodosPagamentos () {
         List<Pagamento> pagamentos = pagamentoService.resgatarTodosPagamentos();
 
-        return pagamentos.stream()
+        return ResponseEntity.status(HttpStatus.OK).body(pagamentos.stream()
                 .map(PagamentoMapper::toDto)
-                .toList();
+                .toList());
     }
 
     @PatchMapping("/{id}/estorno")
-    public PagamentoResponseDto estornarPagamento(@PathVariable String id) {
+    public ResponseEntity<PagamentoResponseDto> estornarPagamento(@PathVariable String id) {
         Pagamento pagamento = pagamentoService.estornarPagamento(id);
-        return PagamentoMapper.toDto(pagamento);
+        PagamentoResponseDto response =  PagamentoMapper.toDto(pagamento);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
 }

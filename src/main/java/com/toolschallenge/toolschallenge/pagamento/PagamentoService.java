@@ -1,5 +1,6 @@
 package com.toolschallenge.toolschallenge.pagamento;
 
+import com.toolschallenge.toolschallenge.exception.ConflictException;
 import com.toolschallenge.toolschallenge.exception.ResourceNotFoundException;
 import com.toolschallenge.toolschallenge.pagamento.domain.dto.PagamentoRequestDto;
 import com.toolschallenge.toolschallenge.pagamento.domain.entity.Pagamento;
@@ -20,8 +21,7 @@ public class PagamentoService {
     @Autowired
     private PagamentoRepository pagamentoRepository;
 
-    public Pagamento registerNewPayment (PagamentoRequestDto pagamentoRequest){
-        Pagamento pagamento = PagamentoMapper.toEntity(pagamentoRequest);
+    public Pagamento registerNewPayment (Pagamento pagamento){
 
         // Simulação de regra de negócio: se o valor for maior que R$ 10000,00 de uma só vez, o pagamento é negado, caso contrário, é autorizado.
         if (pagamento.getTransacao().getDescricao().getValor().compareTo(new BigDecimal("10000.00")) > 0) {
@@ -48,7 +48,11 @@ public class PagamentoService {
     }
 
     public Pagamento getById (String id){
-        return pagamentoRepository.getByTransacao_Id(id);
+        Pagamento pagamento = pagamentoRepository.getByTransacao_Id(id);
+        if (pagamento == null) {
+            throw new ResourceNotFoundException("Pagamento não encontrado para id: " + id);
+        }
+        return pagamento;
     }
 
     public List<Pagamento> resgatarTodosPagamentos() {
@@ -57,6 +61,9 @@ public class PagamentoService {
 
     public Pagamento estornarPagamento(String id) {
         Pagamento pagamento = pagamentoRepository.getByTransacao_Id(id);
+        if (pagamento == null) {
+            throw new ResourceNotFoundException("Pagamento não encontrado para id: " + id);
+        }
         pagamento.getTransacao().getDescricao().setTransacaoStatusType(CANCELADO);
 
         return pagamentoRepository.save(pagamento);
@@ -74,7 +81,7 @@ public class PagamentoService {
                 .map(String::valueOf)
                 .filter(n -> !existsCheck.test(n))
                 .findFirst()
-                .orElseThrow();
+                .orElseThrow(() -> new ConflictException("Não foi possível gerar um número único após várias tentativas"));
     }
 
 }

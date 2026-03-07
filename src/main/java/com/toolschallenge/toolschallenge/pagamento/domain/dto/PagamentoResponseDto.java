@@ -92,7 +92,12 @@ public record PagamentoResponseDto(
 
         DescricaoDto respostaDesc = new DescricaoDto(valorStr, dataHora, estabelecimento, nsu, codigoAutorizacao, status);
 
-        String tipo = pm != null && pm.getMetodoPagamentoType() != null ? pm.getMetodoPagamentoType().name() : "";
+        // Normalize response tipo para o mesmo substituir "_" por espaço e manter o captalizado
+        String tipo = "";
+        if (pm != null && pm.getMetodoPagamentoType() != null) {
+            tipo = pm.getMetodoPagamentoType().name();
+            tipo = tipo.trim().replaceAll("_+", " ");
+        }
         String parcelas = pm != null && pm.getParcelas() != null ? String.valueOf(pm.getParcelas()) : "";
         FormaPagamento respostaPm = new FormaPagamento(tipo, parcelas);
 

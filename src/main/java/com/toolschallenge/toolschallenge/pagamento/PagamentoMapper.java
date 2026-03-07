@@ -11,6 +11,7 @@ import com.toolschallenge.toolschallenge.pagamento.domain.enums.MetodoPagamentoT
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 public class PagamentoMapper {
 
@@ -41,7 +42,11 @@ public class PagamentoMapper {
         transacao.setId(request.transacao().id());
 
         MetodoPagamento metodoPagamento = new MetodoPagamento();
-        metodoPagamento.setMetodoPagamentoType(MetodoPagamentoType.valueOf(request.transacao().formaPagamento().tipo()));
+
+        // Tratamento do tipo de pagamento para garantir que seja compatível com o enum
+        String rawTipo = request.transacao().formaPagamento().tipo();
+        String normalizedTipo = normalizeEnumName(rawTipo);
+        metodoPagamento.setMetodoPagamentoType(MetodoPagamentoType.valueOf(normalizedTipo));
         metodoPagamento.setParcelas(Integer.parseInt(request.transacao().formaPagamento().parcelas()));
         transacao.setMetodoPagamento(metodoPagamento);
 
@@ -50,6 +55,10 @@ public class PagamentoMapper {
         return pagamento;
     }
 
+    private static String normalizeEnumName(String raw) {
+        if (raw == null) return "";
+        return raw.trim().replaceAll("\\s+", "_").toUpperCase(Locale.ROOT);
+    }
 
 
     public static PagamentoResponseDto toDto(Pagamento pagamento) {
