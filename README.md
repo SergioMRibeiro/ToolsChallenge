@@ -28,17 +28,17 @@ Antes de executar o projeto é necessário configurar as credenciais de acesso a
 
 A aplicação utiliza variáveis de ambiente para evitar que credenciais fiquem expostas no código.
 
-|Variável   |Descrição                           |
-|-----------|------------------------------------|
-|DB_URL     | URL de conexão com o banco de dados|
-|DB_USERNAME| Usuário do banco                   |
-|DB_PASSWORD| Senha do banco                     |
+| Variável    | Descrição                           |
+|-------------|-------------------------------------|
+| DB_URL      | URL de conexão com o banco de dados |
+| DB_USERNAME | Usuário do banco                    |
+| DB_PASSWORD | Senha do banco                      |
 
 A configuração de variáveis de ambiente pode ser feita diretamente pelo terminal, mas algumas IDEs permitem essa configuração em suas ferramentas de run, como o Intellij.
 
 Exemplo de configuração no sistema Linux 
 ```
-export DB_URL=jdbc:postgresql://localhost:5432/pagamentos
+export DB_URL=postgresql://localhost:5432/pagamentos
 export DB_USER=postgres
 export DB_PASSWORD=postgres
 ```
@@ -125,6 +125,17 @@ com.toolschallenge.toolschallenge
 └── ToolschallengeApplication
 ```
 
+### Valores Recebidos, Tratados e Retornados
+A API recebe valores de carater monetário, data e hora, e tipos de pagamento que são tratados e normalizados para garantir consistência e facilitar o processamento.
+
+Segue uma tabela com os principais valores que foram normalizados e seus tratamentos:
+
+| Valor Recebido         | Valor Retornado | Tratamento Aplicado                                                             |
+|------------------------|-----------------|---------------------------------------------------------------------------------|
+| Valor (String)         | String          | Remoção de vírgula e conversão para BigDecimal                                  |
+| DataHora (String)      | String          | Conversão de String para LocalDateTime utilizando formato "dd/MM/yyyy HH:mm:ss" |
+| TipoPagamento (String) | String          | Normalização para enum TipoPagamento                                            |
+
 
 ## Funcionalidade
 #### Pagamento
@@ -136,6 +147,8 @@ com.toolschallenge.toolschallenge
 6. Avaliar o valor do pagamento (Adicionado para utilização do enum "NEGADO")
 8. Autorizar ou negar a transação
 9. Persistir o pagamento no banco
+10. Gravar DateTime do momento de geração (CreatedAt)
+11. Gravar momento em que houve ultima alteração (UpdatedAt)
 
 Regras aplicadas:
 - Pagamentos acima de determinado valor são negados (10000.00)
@@ -157,6 +170,7 @@ Permite recuperar informações de pagamentos registrados.
 Operações disponíveis:
 - Consulta por ID
 - Consulta de todos os pagamentos
+- Consulta com paginação com valores default de 10 por página
 
 ### Exemplos de entrada e saída
 #### Registrar pagamento
@@ -240,22 +254,61 @@ GET - /pagamento/
 A resposta será uma lista como body abaixo:
 ```
 {
-    "transacao": {
-        "cartao": "4444********1234",
-        "id": "4000023568900001",
-        "descricao": {
-            "valor": "200,00",
-            "dataHora": "01/02/2026 10:30:15",
-            "estabelecimento": "B&B",
-            "nsu": "9829159978",
-            "codigoAutorizacao": "339936500",
-            "status": "AUTORIZADO"
-        },
-        "formaPagamento": {
-            "tipo": "PARCELADO LOJA",
-            "parcelas": "2"
+    "content": [
+        "transacao": {
+            "cartao": "4444********1234",
+            "id": "4000023568900001",
+            "descricao": {
+                "valor": "200,00",
+                "dataHora": "01/02/2026 10:30:15",
+                "estabelecimento": "B&B",
+                "nsu": "9829159978",
+                "codigoAutorizacao": "339936500",
+                "status": "AUTORIZADO"
+            },
+            "formaPagamento": {
+                "tipo": "PARCELADO LOJA",
+                "parcelas": "2"
+            }
         }
-    }
+    ]
+}
+```
+
+#### Consultar todos os pagamentos definindo paginação
+```
+GET - /pagamento/?page=0&size=15
+```
+A resposta será como o  anterior somado a body de paginação e trazendo os 15 elementos como exemplo:
+```
+{
+    "content": [...
+    ],
+    "empty": false,
+    "first": true,
+    "last": false,
+    "number": 0,
+    "numberOfElements": 10,
+    "pageable": {
+        "offset": 0,
+        "pageNumber": 0,
+        "pageSize": 10,
+        "paged": true,
+        "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+        },
+        "unpaged": false
+    },
+    "size": 10,
+    "sort": {
+        "empty": true,
+        "sorted": false,
+        "unsorted": true
+    },
+    "totalElements": 18,
+    "totalPages": 2
 }
 ```
 
@@ -286,6 +339,33 @@ Retorno:
 }
 ```
 
+Segue uma tabela com todos os endpoints disponíveis na API e seus respectivos parâmetros:
+
+| Endpoint                | Método HTTP | Descrição                          | Parâmetros          |
+|-------------------------|-------------|------------------------------------|---------------------|
+| /pagamento              | POST        | Registrar um novo pagamento        | Body: Pagamento     | 
+| /pagamento/{id}         | GET         | Consultar pagamento por ID         | Path Variable: id   |
+| /pagamento/             | GET         | Consultar todos os pagamentos      | parans: page,  size |
+| /pagamento/{id}/estorno | PATCH       | Estornar um pagamento por ID       | Path Variable: id   |
+
+E para fins de consultas SQL, segue uma tabela com os principais campos da tabela de pagamentos no banco de dados:
+
+| Propriedade       | Nome da coluna no banco |
+|-------------------|-------------------------|
+| id (interno)      | id                      |
+| cartao            | cartao                  |
+| id (externo)      | transacao_id            |
+| valor             | valor                   |
+| dataHora          | data_hora               |
+| estabelecimento   | estabelecimento         |
+| nsu               | nsu                     |
+| codigoAutorizacao | codigo_autorizacao      |
+| status            | transacao_status_type   |
+| tipo              | metodo_pagamento        |
+| parcelas          | parcelas                |
+| createdAt         | created_at              |
+| updatedAt         | updated_at              |
+
 ### Testes unitários
 A aplicação possui testes unitários focados na camada de Service, responsável pelas regras de negócio.
 
@@ -296,10 +376,12 @@ Os testes utilizam:
 Os cenários testados incluem:
 - Registro de pagamento autorizado
 - Registro de pagamento negado
-- Geração de NSU
+- Geração de NSU com valores randômicos de 10 digitos
+- Nova geração de valores randómicos caso valor já exista no banco
 - Geração de código de autorização
 - Consulta de pagamento
 - Estorno de pagamento
+
 ## Ponto de vista do dev
 #### Escolhas tomadas
 
@@ -321,8 +403,8 @@ Durante o desenvolvimento alguns pontos exigiram maior atenção:
 - Cuidado na escolha de não seguir com o Id que vinha do payload por se tratar de um ID externo
 ### Propostas de melhoria
 Algumas melhorias que poderiam ser implementadas em versões futuras:
+- refinar necessidade de campos de respostas de consultar todos os pagamentos com paginação
 - Refinar o tratamento global de exceptions
-- Implementação de paginação na listagem de pagamentos
 - Inclusão de logs estruturados
 - Inclusão de testes de integração
 - Adição de documentação automática da API (Swagger / OpenAPI)

@@ -2,9 +2,10 @@ package com.toolschallenge.toolschallenge.pagamento;
 
 import com.toolschallenge.toolschallenge.exception.ConflictException;
 import com.toolschallenge.toolschallenge.exception.ResourceNotFoundException;
-import com.toolschallenge.toolschallenge.pagamento.domain.dto.PagamentoRequestDto;
 import com.toolschallenge.toolschallenge.pagamento.domain.entity.Pagamento;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -55,8 +56,8 @@ public class PagamentoService {
         return pagamento;
     }
 
-    public List<Pagamento> resgatarTodosPagamentos() {
-        return pagamentoRepository.findAll();
+    public Page<Pagamento> resgatarTodosPagamentos(Pageable pageable) {
+        return pagamentoRepository.findAll(pageable);
     }
 
     public Pagamento estornarPagamento(String id) {

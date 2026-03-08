@@ -1,4 +1,4 @@
-package com.toolschallenge.toolschallenge.pagamento.domain.dto;
+package com.toolschallenge.toolschallenge.pagamento.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.toolschallenge.toolschallenge.pagamento.domain.entity.Pagamento;
