@@ -28,17 +28,17 @@ Antes de executar o projeto é necessário configurar as credenciais de acesso a
 
 A aplicação utiliza variáveis de ambiente para evitar que credenciais fiquem expostas no código.
 
-|Variável   |Descrição                           |
-|-----------|------------------------------------|
-|DB_URL     | URL de conexão com o banco de dados|
-|DB_USERNAME| Usuário do banco                   |
-|DB_PASSWORD| Senha do banco                     |
+| Variável    | Descrição                           |
+|-------------|-------------------------------------|
+| DB_URL      | URL de conexão com o banco de dados |
+| DB_USERNAME | Usuário do banco                    |
+| DB_PASSWORD | Senha do banco                      |
 
 A configuração de variáveis de ambiente pode ser feita diretamente pelo terminal, mas algumas IDEs permitem essa configuração em suas ferramentas de run, como o Intellij.
 
 Exemplo de configuração no sistema Linux 
 ```
-export DB_URL=jdbc:postgresql://localhost:5432/pagamentos
+export DB_URL=postgresql://localhost:5432/pagamentos
 export DB_USER=postgres
 export DB_PASSWORD=postgres
 ```
@@ -128,13 +128,13 @@ com.toolschallenge.toolschallenge
 ### Valores Recebidos, Tratados e Retornados
 A API recebe valores de carater monetário, data e hora, e tipos de pagamento que são tratados e normalizados para garantir consistência e facilitar o processamento.
 
-Segue uma tabela com os principais valores e seus tratamentos:
+Segue uma tabela com os principais valores que foram normalizados e seus tratamentos:
 
-|Valor Recebido|Tratamento Aplicado| Valor Retornado |
-|--------------|-------------------|-----------------|
-|Valor (String)|Remoção de vírgula e conversão para BigDecimal| String          |
-|DataHora (String)|Conversão de String para LocalDateTime utilizando formato "dd/MM/yyyy HH:mm:ss"| String          |
-|Tipo de Pagamento (String)|Normalização para enum TipoPagamento| String          |
+| Valor Recebido         | Valor Retornado | Tratamento Aplicado                                                             |
+|------------------------|-----------------|---------------------------------------------------------------------------------|
+| Valor (String)         | String          | Remoção de vírgula e conversão para BigDecimal                                  |
+| DataHora (String)      | String          | Conversão de String para LocalDateTime utilizando formato "dd/MM/yyyy HH:mm:ss" |
+| TipoPagamento (String) | String          | Normalização para enum TipoPagamento                                            |
 
 
 ## Funcionalidade
@@ -147,6 +147,8 @@ Segue uma tabela com os principais valores e seus tratamentos:
 6. Avaliar o valor do pagamento (Adicionado para utilização do enum "NEGADO")
 8. Autorizar ou negar a transação
 9. Persistir o pagamento no banco
+10. Gravar DateTime do momento de geração (CreatedAt)
+11. Gravar momento em que houve ultima alteração (UpdatedAt)
 
 Regras aplicadas:
 - Pagamentos acima de determinado valor são negados (10000.00)
@@ -339,14 +341,14 @@ Retorno:
 
 Segue uma tabela com todos os endpoints disponíveis na API e seus respectivos parâmetros:
 
-|Endpoint                         | Método HTTP | Descrição                          | Parâmetros          |
-|---------------------------------|-------------|------------------------------------|---------------------|
-|/pagamento                       | POST        | Registrar um novo pagamento        | Body: Pagamento     | 
-|/pagamento/{id}                 | GET         | Consultar pagamento por ID         | Path Variable: id   |
-|/pagamento/                     | GET         | Consultar todos os pagamentos      | parans: page,  size |
-|/pagamento/{id}/estorno         | PATCH       | Estornar um pagamento por ID       | Path Variable: id   |
+| Endpoint                | Método HTTP | Descrição                          | Parâmetros          |
+|-------------------------|-------------|------------------------------------|---------------------|
+| /pagamento              | POST        | Registrar um novo pagamento        | Body: Pagamento     | 
+| /pagamento/{id}         | GET         | Consultar pagamento por ID         | Path Variable: id   |
+| /pagamento/             | GET         | Consultar todos os pagamentos      | parans: page,  size |
+| /pagamento/{id}/estorno | PATCH       | Estornar um pagamento por ID       | Path Variable: id   |
 
-E para fins de consultas SQL diretamente pelo banco de dados, segue uma tabela com os principais campos da tabela de pagamentos:
+E para fins de consultas SQL, segue uma tabela com os principais campos da tabela de pagamentos no banco de dados:
 
 | Propriedade       | Nome da coluna no banco |
 |-------------------|-------------------------|
@@ -361,6 +363,8 @@ E para fins de consultas SQL diretamente pelo banco de dados, segue uma tabela c
 | status            | transacao_status_type   |
 | tipo              | metodo_pagamento        |
 | parcelas          | parcelas                |
+| createdAt         | created_at              |
+| updatedAt         | updated_at              |
 
 ### Testes unitários
 A aplicação possui testes unitários focados na camada de Service, responsável pelas regras de negócio.
