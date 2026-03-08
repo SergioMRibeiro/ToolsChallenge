@@ -9,6 +9,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -162,21 +166,38 @@ class PagamentoServiceTest {
     // --------------------------------------------------
 
     @Test
-    void resgatarTodosPagamentos_returnsAllPayments() {
+    void resgatarTodosPagamentos_withValidPageable_returnsPage() {
         // Arrange
+        Pageable pageable = PageRequest.of(0, 2);
         Pagamento p1 = buildPagamento(new BigDecimal("10.00"), "a");
         Pagamento p2 = buildPagamento(new BigDecimal("20.00"), "b");
-        when(pagamentoRepository.findAll()).thenReturn(List.of(p1, p2));
+
+        Page<Pagamento> page = new PageImpl<>(List.of(p1, p2), pageable, 10);
+        when(pagamentoRepository.findAll(pageable)).thenReturn(page);
 
         // Act
-        List<Pagamento> all = pagamentoService.resgatarTodosPagamentos();
+        Page<Pagamento> result = pagamentoService.resgatarTodosPagamentos(pageable);
 
         // Assert
-        assertNotNull(all);
-        assertEquals(2, all.size());
-        assertTrue(all.contains(p1));
-        assertTrue(all.contains(p2));
-        verify(pagamentoRepository, times(1)).findAll();
+        assertNotNull(result);
+        assertEquals(10, result.getTotalElements());
+        assertEquals(2, result.getContent().size());
+        assertTrue(result.getContent().contains(p1));
+        assertTrue(result.getContent().contains(p2));
+
+        verify(pagamentoRepository, times(1)).findAll(pageable);
+    }
+
+    @Test
+    void resgatarTodosPagamentos_nullPageable_throwsIllegalArgumentException() {
+        // Arrange
+        when(pagamentoRepository.findAll((Pageable) isNull())).thenThrow(new IllegalArgumentException("pageable cannot be null"));
+
+        // Act & Assert
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> pagamentoService.resgatarTodosPagamentos(null));
+        assertEquals("pageable cannot be null", ex.getMessage());
+
+        verify(pagamentoRepository, times(1)).findAll((Pageable) isNull());
     }
 
     // --------------------------------------------------

@@ -56,10 +56,6 @@ public class PagamentoService {
         return pagamento;
     }
 
-    public List<Pagamento> resgatarTodosPagamentos() {
-        return pagamentoRepository.findAll();
-    }
-
     public Page<Pagamento> resgatarTodosPagamentos(Pageable pageable) {
         return pagamentoRepository.findAll(pageable);
     }
