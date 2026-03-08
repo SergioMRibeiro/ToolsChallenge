@@ -1,5 +1,6 @@
 package com.toolschallenge.toolschallenge.pagamento;
 
+import com.toolschallenge.toolschallenge.exception.ConflictException;
 import com.toolschallenge.toolschallenge.exception.ResourceNotFoundException;
 import com.toolschallenge.toolschallenge.pagamento.domain.entity.Pagamento;
 import com.toolschallenge.toolschallenge.pagamento.domain.valueobejct.Descricao;
@@ -231,6 +232,21 @@ class PagamentoServiceTest {
         ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> pagamentoService.estornarPagamento("missing-estorno"));
         assertTrue(ex.getMessage().contains("Pagamento não encontrado"));
         verify(pagamentoRepository, times(1)).getByTransacao_Id("missing-estorno");
+        verify(pagamentoRepository, never()).save(any());
+    }
+
+    @Test
+    void estornarPagamento_alreadyCancelled_throwsConflictException() {
+        // Arrange
+        Pagamento pagamento = buildPagamento(new BigDecimal("200.00"), "tx-estorno-2");
+        pagamento.getTransacao().getDescricao().setTransacaoStatusType(CANCELADO);
+
+        when(pagamentoRepository.getByTransacao_Id("tx-estorno-2")).thenReturn(pagamento);
+
+        // Act & Assert
+        ConflictException ex = assertThrows(ConflictException.class, () -> pagamentoService.estornarPagamento("tx-estorno-2"));
+        assertTrue(ex.getMessage().contains("Pagamentos já cancelado anteriormente"));
+        verify(pagamentoRepository, times(1)).getByTransacao_Id("tx-estorno-2");
         verify(pagamentoRepository, never()).save(any());
     }
 
