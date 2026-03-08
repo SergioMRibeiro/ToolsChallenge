@@ -223,4 +223,16 @@ class PagamentoControlllerTest {
         verify(pagamentoService, times(1)).estornarPagamento(id);
     }
 
+    @Test
+    void estornarPagamento_serviceThrows_conflictException_propagated() {
+        // Arrange
+        String id = "tx-estorno-conflict";
+        when(pagamentoService.estornarPagamento(id)).thenThrow(new RuntimeException("Conflito ao estornar"));
+
+        // Act & Assert
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> pagamentoControlller.estornarPagamento(id));
+        assertEquals("Conflito ao estornar", ex.getMessage());
+        verify(pagamentoService, times(1)).estornarPagamento(id);
+    }
+
 }

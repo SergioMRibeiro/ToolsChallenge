@@ -65,6 +65,9 @@ public class PagamentoService {
         if (pagamento == null) {
             throw new ResourceNotFoundException("Pagamento não encontrado para id: " + id);
         }
+        if (pagamento.getTransacao().getDescricao().getTransacaoStatusType() == CANCELADO) {
+            throw new ConflictException("Pagamentos já cancelado anteriormente");
+        }
         pagamento.getTransacao().getDescricao().setTransacaoStatusType(CANCELADO);
 
         return pagamentoRepository.save(pagamento);
