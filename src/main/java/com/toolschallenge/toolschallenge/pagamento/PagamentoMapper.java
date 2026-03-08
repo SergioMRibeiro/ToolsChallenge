@@ -1,7 +1,7 @@
 package com.toolschallenge.toolschallenge.pagamento;
 
-import com.toolschallenge.toolschallenge.pagamento.domain.dto.PagamentoRequestDto;
-import com.toolschallenge.toolschallenge.pagamento.domain.dto.PagamentoResponseDto;
+import com.toolschallenge.toolschallenge.pagamento.api.dto.PagamentoRequestDto;
+import com.toolschallenge.toolschallenge.pagamento.api.dto.PagamentoResponseDto;
 import com.toolschallenge.toolschallenge.pagamento.domain.entity.Pagamento;
 import com.toolschallenge.toolschallenge.pagamento.domain.valueobejct.Descricao;
 import com.toolschallenge.toolschallenge.pagamento.domain.valueobejct.MetodoPagamento;

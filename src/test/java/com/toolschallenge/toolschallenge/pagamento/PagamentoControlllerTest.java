@@ -1,8 +1,9 @@
 package com.toolschallenge.toolschallenge.pagamento;
 
 import com.toolschallenge.toolschallenge.exception.ResourceNotFoundException;
-import com.toolschallenge.toolschallenge.pagamento.domain.dto.PagamentoRequestDto;
-import com.toolschallenge.toolschallenge.pagamento.domain.dto.PagamentoResponseDto;
+import com.toolschallenge.toolschallenge.pagamento.api.PagamentoControlller;
+import com.toolschallenge.toolschallenge.pagamento.api.dto.PagamentoRequestDto;
+import com.toolschallenge.toolschallenge.pagamento.api.dto.PagamentoResponseDto;
 import com.toolschallenge.toolschallenge.pagamento.domain.entity.Pagamento;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -138,22 +140,23 @@ class PagamentoControlllerTest {
         PagamentoResponseDto dto2 = mock(PagamentoResponseDto.class);
 
         try (MockedStatic<PagamentoMapper> mockedMapper = mockStatic(PagamentoMapper.class)) {
-            when(pagamentoService.resgatarTodosPagamentos()).thenReturn(List.of(p1, p2));
+            org.springframework.data.domain.Page<Pagamento> page = new org.springframework.data.domain.PageImpl<>(List.of(p1, p2), org.springframework.data.domain.PageRequest.of(0,10), 2);
+            when(pagamentoService.resgatarTodosPagamentos(any(org.springframework.data.domain.Pageable.class))).thenReturn(page);
             mockedMapper.when(() -> PagamentoMapper.toDto(eq(p1))).thenReturn(dto1);
             mockedMapper.when(() -> PagamentoMapper.toDto(eq(p2))).thenReturn(dto2);
 
             // Act
-            var response = pagamentoControlller.regatarTodosPagamentos();
+            var response = pagamentoControlller.regatarTodosPagamentos(0,10);
 
             // Assert
             assertNotNull(response);
             assertEquals(200, response.getStatusCode().value());
             assertNotNull(response.getBody());
-            assertEquals(2, response.getBody().size());
-            assertTrue(response.getBody().contains(dto1));
-            assertTrue(response.getBody().contains(dto2));
+            assertEquals(2, response.getBody().getContent().size());
+            assertTrue(response.getBody().getContent().contains(dto1));
+            assertTrue(response.getBody().getContent().contains(dto2));
 
-            verify(pagamentoService, times(1)).resgatarTodosPagamentos();
+            verify(pagamentoService, times(1)).resgatarTodosPagamentos(any(org.springframework.data.domain.Pageable.class));
             mockedMapper.verify(() -> PagamentoMapper.toDto(eq(p1)), times(1));
             mockedMapper.verify(() -> PagamentoMapper.toDto(eq(p2)), times(1));
         }
@@ -163,18 +166,19 @@ class PagamentoControlllerTest {
     void regatarTodosPagamentos_empty_returnsEmptyList() {
         // Arrange
         try (MockedStatic<PagamentoMapper> mockedMapper = mockStatic(PagamentoMapper.class)) {
-            when(pagamentoService.resgatarTodosPagamentos()).thenReturn(List.of());
+            org.springframework.data.domain.Page<Pagamento> page = new org.springframework.data.domain.PageImpl<>(List.of(), org.springframework.data.domain.PageRequest.of(0,10), 0);
+            when(pagamentoService.resgatarTodosPagamentos(any(org.springframework.data.domain.Pageable.class))).thenReturn(page);
 
             // Act
-            var response = pagamentoControlller.regatarTodosPagamentos();
+            var response = pagamentoControlller.regatarTodosPagamentos(0,10);
 
             // Assert
             assertNotNull(response);
             assertEquals(200, response.getStatusCode().value());
             assertNotNull(response.getBody());
-            assertTrue(response.getBody().isEmpty());
+            assertTrue(response.getBody().getContent().isEmpty());
 
-            verify(pagamentoService, times(1)).resgatarTodosPagamentos();
+            verify(pagamentoService, times(1)).resgatarTodosPagamentos(any(org.springframework.data.domain.Pageable.class));
             mockedMapper.verifyNoInteractions();
         }
     }

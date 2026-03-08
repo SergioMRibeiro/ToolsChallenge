@@ -1,14 +1,21 @@
-package com.toolschallenge.toolschallenge.pagamento;
+package com.toolschallenge.toolschallenge.pagamento.api;
 
-import com.toolschallenge.toolschallenge.pagamento.domain.dto.PagamentoRequestDto;
-import com.toolschallenge.toolschallenge.pagamento.domain.dto.PagamentoResponseDto;
+import com.toolschallenge.toolschallenge.pagamento.PagamentoMapper;
+import com.toolschallenge.toolschallenge.pagamento.PagamentoService;
+import com.toolschallenge.toolschallenge.pagamento.api.dto.PagamentoRequestDto;
+import com.toolschallenge.toolschallenge.pagamento.api.dto.PagamentoResponseDto;
 import com.toolschallenge.toolschallenge.pagamento.domain.entity.Pagamento;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/pagamento")
@@ -36,12 +43,18 @@ public class PagamentoControlller {
      }
 
     @GetMapping
-    public ResponseEntity<List<PagamentoResponseDto>> regatarTodosPagamentos () {
-        List<Pagamento> pagamentos = pagamentoService.resgatarTodosPagamentos();
-
-        return ResponseEntity.status(HttpStatus.OK).body(pagamentos.stream()
+    public ResponseEntity<Page<PagamentoResponseDto>> regatarTodosPagamentos (
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size // O limite em 10 é para evitar que o cliente solicite uma quantidade muito grande de registros, o que poderia sobrecarregar o sistema.
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Pagamento> pagamentosPage = pagamentoService.resgatarTodosPagamentos(pageable);
+        List<PagamentoResponseDto> dtos = pagamentosPage.stream()
                 .map(PagamentoMapper::toDto)
-                .toList());
+                .collect(Collectors.toList());
+        Page<PagamentoResponseDto> dtoPage = new PageImpl<>(dtos, pageable, pagamentosPage.getTotalElements());
+
+        return ResponseEntity.status(HttpStatus.OK).body(dtoPage);
     }
 
     @PatchMapping("/{id}/estorno")
