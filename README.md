@@ -223,7 +223,7 @@ Resposta:
 #### Consultar pagamento
 
 ```
-GET - /pagamento/4000023568900001
+GET - pagamento/consulta/4000023568900001
 ```
 
 Resposta:
@@ -249,9 +249,9 @@ Resposta:
 ```
 #### Consultar todos os pagamentos
 ```
-GET - /pagamento/
+GET - /pagamento/consulta-todos
 ```
-A resposta será uma lista como body abaixo:
+A resposta será uma lista como body abaixo dos 10 primeiros pagamentos (quantidade default para visualização durante o desafio):
 ```
 {
     "content": [
@@ -277,7 +277,7 @@ A resposta será uma lista como body abaixo:
 
 #### Consultar todos os pagamentos definindo paginação
 ```
-GET - /pagamento/?page=0&size=15
+GET - /pagamento/consulta-todos?page=0&size=15
 ```
 A resposta será como o  anterior somado a body de paginação e trazendo os 15 elementos como exemplo:
 ```
