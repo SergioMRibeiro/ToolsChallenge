@@ -35,14 +35,14 @@ public class PagamentoControlller {
 
      }
 
-     @GetMapping("/{id}")
+     @GetMapping("/consulta/{id}")
     public ResponseEntity<PagamentoResponseDto>  getById (@PathVariable String id) {
          Pagamento pagamento = pagamentoService.getById(id);
          return ResponseEntity.status(HttpStatus.OK).body(PagamentoMapper.toDto(pagamento));
 
      }
 
-    @GetMapping
+    @GetMapping("/consulta-todos")
     public ResponseEntity<Page<PagamentoResponseDto>> regatarTodosPagamentos (
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "10") int size // O limite em 10 é para evitar que o cliente solicite uma quantidade muito grande de registros, o que poderia sobrecarregar o sistema.
