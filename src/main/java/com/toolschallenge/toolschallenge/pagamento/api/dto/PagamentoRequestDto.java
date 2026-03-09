@@ -9,7 +9,9 @@ public record PagamentoRequestDto(
         @NotNull @Valid Transacao transacao
 ) {
     public record Transacao(
+            // deve conter apenas números, sem espaços ou caracteres especiais, e ter exatamente 16 dígitos
             @NotBlank String cartao,
+            @Pattern(regexp = "^\\d{15}$", message = "ID deve conter exatamente 15 dígitos numéricos")
             @NotBlank String id,
             @NotNull @Valid Descricao descricao,
             @NotNull @Valid FormaPagamento formaPagamento
