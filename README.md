@@ -130,11 +130,15 @@ A API recebe valores de carater monetário, data e hora, e tipos de pagamento qu
 
 Segue uma tabela com os principais valores que foram normalizados e seus tratamentos:
 
-| Valor Recebido         | Valor Retornado | Tratamento Aplicado                                                             |
-|------------------------|-----------------|---------------------------------------------------------------------------------|
-| Valor (String)         | String          | Remoção de vírgula e conversão para BigDecimal                                  |
-| DataHora (String)      | String          | Conversão de String para LocalDateTime utilizando formato "dd/MM/yyyy HH:mm:ss" |
-| TipoPagamento (String) | String          | Normalização para enum TipoPagamento                                            |
+| Valor Recebido             | Valor Retornado | Tratamento Aplicado                                                                                                   |
+|----------------------------|-----------------|-----------------------------------------------------------------------------------------------------------------------|
+| Valor (String)             | String          | Remoção de vírgula e conversão para BigDecimal                                                                        |
+| DataHora (String)          | String          | Conversão de String para LocalDateTime utilizando formato "dd/MM/yyyy HH:mm:ss"                                       |
+| TipoPagamento (String)     | String          | Normalização para enum TipoPagamento                                                                                  |
+| Parcelas (String)          | Integer         | Conversão de String para Integer                                                                                      |
+| ID (transacao) (String)    | String          | Validação de formato e uso como ID externo, sem persistir como <br/> ID interno e precisa conter 15 digitos numéricos |
+| nsu (String)               | String          | Geração de NSU único com 10 dígitos numéricos randômicos, garantindo unicidade no banco de dados                      |
+| codigoAutorizacao (String) | String          | Geração de código de autorização único com 9 dígitos numéricos randômicos, garantindo unicidade no banco de dados     |
 
 
 ## Funcionalidade
@@ -154,6 +158,10 @@ Regras aplicadas:
 - Pagamentos acima de determinado valor são negados (10000.00)
 - Cada pagamento possui NSU único
 - Cada pagamento possui código de autorização único
+- O ID recebido no payload é tratado como um ID externo e não é utilizado como chave primária no banco de dados, para evitar problemas de duplicidade e garantir a integridade dos dados.
+- O ID interno é gerado automaticamente pelo banco de dados e utilizado para identificação única de cada pagamento registrado.
+- O ID externo é persistido como um campo separado na entidade de pagamento, permitindo a associação entre o pagamento registrado e o ID fornecido no payload, sem comprometer a integridade do banco de dados.
+- O Tratamento para ID externo permite apenas a aceitação de IDs numéricos com 15 dígitos, garantindo um formato consistente para os IDs externos e evitando problemas de formatação ou validação.
 
 #### Estorno
 Responsável por realizar o estorno de um pagamento previamente registrado.

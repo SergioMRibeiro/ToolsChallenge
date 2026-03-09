@@ -14,10 +14,10 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Transacao {
-    @Column(name = "cartao", nullable = false)
+    @Column(name = "cartao", nullable = false, length = 16)
     private String cartao;
 
-    @Column(name = "transacao_id", nullable = false, unique = true)
+    @Column(name = "transacao_id", nullable = false, unique = true, length = 15)
     private String id;
 
     @Embedded
